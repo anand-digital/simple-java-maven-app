@@ -1,0 +1,34 @@
+pipeline {
+    agent {
+        node {
+            label 'agent1'
+        }
+    }
+    stages {
+        stage('Build') {
+            steps {
+                mail to:"ananddigital67@gmail.com", subject: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'", body: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"            
+                withMaven(maven: 'maven-3.9.1') {
+                    sh 'mvn -B -DskipTests clean package'
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                withMaven(maven: 'maven-3.9.1') {
+                    sh 'mvn test'
+                }
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
+                }
+            }
+        }
+        stage('Deliver') {
+            steps {
+                sh './jenkins/scripts/deliver.sh'
+            }
+        }
+    }
+}
